@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fluffy Buttermilk Pancakes – Flavora</title>
+  <!-- Google Fonts: Playfair Display + DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F97316',
+            secondary: '#FEF3C7',
+            dark: '#1C1917',
+          },
+          fontFamily: {
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .card-hover {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    }
+
+    /* ── Scroll Reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    /* ── Mobile Menu ── */
+    #mobile-menu {
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+    #mobile-menu.open {
+      max-height: 400px;
+      opacity: 1;
+    }
+
+    /* ── Ingredient crossed out ── */
+    .ingredient-item.checked label {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    /* ── Star rating ── */
+    .star-btn { cursor: pointer; transition: transform 0.15s ease; }
+    .star-btn:hover { transform: scale(1.2); }
+
+    /* ── Step completed ── */
+    .step-done .step-num {
+      background-color: #22c55e !important;
+    }
+    .step-done .step-content {
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-800 font-sans" style="font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif">
+
+  <!-- ===== NAVBAR ===== -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-300">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2">
+        <span class="text-3xl">🍴</span>
+        <span class="text-2xl font-bold text-primary font-display tracking-wide">Flavora</span>
+      </a>
+      <ul class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+        <li><a href="index.html" class="hover:text-primary transition-colors">Home</a></li>
+        <li><a href="index.html#categories" class="hover:text-primary transition-colors">Categories</a></li>
+        <li><a href="index.html#recipes" class="text-primary border-b-2 border-primary pb-0.5">Recipes</a></li>
+        <li><a href="index.html#about" class="hover:text-primary transition-colors">About</a></li>
+      </ul>
+      <div class="flex items-center gap-3">
+        <div class="hidden md:flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          </svg>
+          <input type="text" placeholder="Search recipes..." class="bg-transparent text-sm outline-none w-36 text-gray-600 placeholder-gray-400" />
+        </div>
+        <a href="#" class="hidden md:block bg-primary text-white text-sm font-semibold px-5 py-2 rounded-full hover:bg-orange-600 transition-colors">Sign Up</a>
+        <!-- Hamburger -->
+        <button id="hamburger-btn" class="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Toggle menu">
+          <span id="ham-line1" class="block w-5 h-0.5 bg-gray-700 transition-all duration-300"></span>
+          <span id="ham-line2" class="block w-5 h-0.5 bg-gray-700 transition-all duration-300"></span>
+          <span id="ham-line3" class="block w-5 h-0.5 bg-gray-700 transition-all duration-300"></span>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-100 px-6">
+      <ul class="flex flex-col gap-1 py-4 text-sm font-medium text-gray-600">
+        <li><a href="index.html" class="block py-2.5 px-3 rounded-xl hover:bg-gray-50 hover:text-primary transition-colors">Home</a></li>
+        <li><a href="index.html#categories" class="block py-2.5 px-3 rounded-xl hover:bg-gray-50 hover:text-primary transition-colors">Categories</a></li>
+        <li><a href="index.html#recipes" class="block py-2.5 px-3 rounded-xl bg-orange-50 text-primary">Recipes</a></li>
+        <li><a href="index.html#about" class="block py-2.5 px-3 rounded-xl hover:bg-gray-50 hover:text-primary transition-colors">About</a></li>
+        <li class="pt-2"><a href="#" class="block text-center bg-primary text-white font-semibold px-5 py-2.5 rounded-full hover:bg-orange-600 transition-colors">Sign Up</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ===== BREADCRUMB ===== -->
+  <div class="pt-24 pb-4 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+      <nav class="flex items-center gap-2 text-sm text-gray-500">
+        <a href="index.html" class="hover:text-primary transition-colors">Home</a>
+        <span>›</span>
+        <a href="index.html#recipes" class="hover:text-primary transition-colors">Recipes</a>
+        <span>›</span>
+        <a href="index.html#recipes" class="hover:text-primary transition-colors">Breakfast</a>
+        <span>›</span>
+        <span class="text-gray-800 font-medium">Fluffy Buttermilk Pancakes</span>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ===== RECIPE HERO ===== -->
+  <section class="bg-gray-50 py-10">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <!-- Info -->
+        <div class="reveal">
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="bg-orange-100 text-primary text-xs font-bold px-3 py-1 rounded-full">Breakfast</span>
+            <span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-3 py-1 rounded-full">⚡ Quick & Easy</span>
+            <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">American</span>
+          </div>
+          <h1 class="text-4xl md:text-5xl font-bold text-dark font-display leading-tight mb-4">
+            Fluffy Buttermilk Pancakes
+          </h1>
+          <p class="text-gray-500 text-lg leading-relaxed mb-6">
+            Golden, cloud-like pancakes made with real buttermilk for the fluffiest texture every single time. A classic weekend breakfast that the whole family will love.
+          </p>
+          <!-- Rating & Author -->
+          <div class="flex flex-wrap items-center gap-4 mb-8">
+            <div class="flex items-center gap-1">
+              <span class="text-yellow-400 text-xl">★★★★★</span>
+              <span class="font-bold text-gray-800 ml-1">4.9</span>
+              <span class="text-gray-400 text-sm">(248 reviews)</span>
+            </div>
+            <span class="text-gray-300 hidden sm:block">|</span>
+            <div class="flex items-center gap-2">
+              <img src="https://i.pravatar.cc/32?img=47" alt="Chef" class="w-8 h-8 rounded-full" />
+              <span class="text-sm text-gray-600">by <span class="font-semibold text-gray-800">Chef Maria Santos</span></span>
+            </div>
+          </div>
+          <!-- Quick Stats -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+              <span class="text-2xl">⏱</span>
+              <p class="text-xs text-gray-400 mt-1">Prep Time</p>
+              <p class="font-bold text-dark">10 min</p>
+            </div>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+              <span class="text-2xl">🔥</span>
+              <p class="text-xs text-gray-400 mt-1">Cook Time</p>
+              <p class="font-bold text-dark">10 min</p>
+            </div>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+              <span class="text-2xl">👤</span>
+              <p class="text-xs text-gray-400 mt-1">Servings</p>
+              <p class="font-bold text-dark" id="serving-display">4 people</p>
+            </div>
+            <div class="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
+              <span class="text-2xl">📊</span>
+              <p class="text-xs text-gray-400 mt-1">Difficulty</p>
+              <p class="font-bold text-dark">Easy</p>
+            </div>
+          </div>
+          <!-- Action Buttons -->
+          <div class="flex gap-3 flex-wrap">
+            <button id="fav-btn-detail" onclick="toggleFavDetail()" class="bg-primary text-white font-semibold px-6 py-3 rounded-full hover:bg-orange-600 transition-colors flex items-center gap-2">
+              <svg id="fav-icon-detail" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+              </svg>
+              <span id="fav-label-detail">Save Recipe</span>
+            </button>
+            <button onclick="shareRecipe()" class="border border-gray-200 text-gray-600 font-semibold px-6 py-3 rounded-full hover:border-primary hover:text-primary transition-colors flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+              </svg>
+              Share
+            </button>
+            <button onclick="window.print()" class="border border-gray-200 text-gray-600 font-semibold px-6 py-3 rounded-full hover:border-primary hover:text-primary transition-colors flex items-center gap-2">
+              🖨 Print
+            </button>
+          </div>
+        </div>
+
+        <!-- Image -->
+        <div class="relative reveal reveal-delay-2">
+          <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=700&q=80" alt="Buttermilk Pancakes" class="rounded-3xl w-full h-96 object-cover shadow-xl" />
+          <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-2xl px-4 py-3 flex items-center gap-3 shadow">
+            <span class="text-2xl">🏆</span>
+            <div>
+              <p class="text-xs text-gray-500">Community Pick</p>
+              <p class="font-bold text-dark text-sm">Most Loved Recipe</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <section class="py-16">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+
+        <!-- LEFT: Ingredients + Steps -->
+        <div class="lg:col-span-2">
+
+          <!-- ── INGREDIENTS ── -->
+          <div class="mb-12 reveal">
+            <h2 class="text-3xl font-bold text-dark font-display mb-6">Ingredients</h2>
+            <div class="bg-orange-50 rounded-3xl p-6">
+              <!-- Servings Adjuster -->
+              <div class="flex items-center justify-between mb-6 pb-4 border-b border-orange-100">
+                <div>
+                  <span class="text-sm font-semibold text-gray-700">Adjust Servings</span>
+                  <p class="text-xs text-gray-400 mt-0.5">Ingredients scale automatically</p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <button onclick="changeServings(-1)" class="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center text-primary font-bold hover:bg-primary hover:text-white transition-colors text-lg leading-none">−</button>
+                  <span id="servings-count" class="font-bold text-dark text-lg w-8 text-center">4</span>
+                  <button onclick="changeServings(1)"  class="w-9 h-9 bg-white rounded-full shadow flex items-center justify-center text-primary font-bold hover:bg-primary hover:text-white transition-colors text-lg leading-none">+</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="ingredients-list">
+                <!-- Ingredients rendered by JS -->
+              </div>
+
+              <!-- Clear checked -->
+              <button onclick="clearChecked()" class="mt-4 text-xs text-gray-400 hover:text-primary transition-colors underline">
+                Clear all checks
+              </button>
+            </div>
+          </div>
+
+          <!-- ── INSTRUCTIONS ── -->
+          <div class="mb-12 reveal">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-3xl font-bold text-dark font-display">Instructions</h2>
+              <button onclick="resetSteps()" class="text-xs text-gray-400 hover:text-primary transition-colors underline">Reset steps</button>
+            </div>
+            <div class="space-y-6" id="steps-list">
+              <!-- Steps rendered by JS -->
+            </div>
+          </div>
+
+          <!-- ── NUTRITION ── -->
+          <div class="mb-12 reveal">
+            <h2 class="text-3xl font-bold text-dark font-display mb-2">Nutrition Facts</h2>
+            <p class="text-gray-400 text-sm mb-4">Per serving (3 pancakes) · based on <span id="nutrition-servings">4</span> servings</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div class="bg-gray-50 rounded-2xl p-5 text-center">
+                <p class="text-3xl font-bold text-primary">320</p>
+                <p class="text-gray-500 text-sm mt-1">Calories</p>
+              </div>
+              <div class="bg-gray-50 rounded-2xl p-5 text-center">
+                <p class="text-3xl font-bold text-blue-500">8g</p>
+                <p class="text-gray-500 text-sm mt-1">Protein</p>
+              </div>
+              <div class="bg-gray-50 rounded-2xl p-5 text-center">
+                <p class="text-3xl font-bold text-yellow-500">55g</p>
+                <p class="text-gray-500 text-sm mt-1">Carbs</p>
+              </div>
+              <div class="bg-gray-50 rounded-2xl p-5 text-center">
+                <p class="text-3xl font-bold text-green-500">9g</p>
+                <p class="text-gray-500 text-sm mt-1">Fat</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── REVIEWS ── -->
+          <div class="reveal">
+            <h2 class="text-3xl font-bold text-dark font-display mb-6">Reviews</h2>
+            <div id="reviews-list" class="space-y-5">
+              <!-- Rendered by JS -->
+            </div>
+
+            <!-- Add Review Form -->
+            <div class="mt-8 bg-orange-50 rounded-3xl p-6">
+              <h3 class="font-bold text-dark mb-4">Leave a Review</h3>
+              <!-- Interactive stars -->
+              <div class="flex gap-1 mb-4" id="star-rating">
+                <button class="star-btn text-3xl text-gray-300" data-val="1">★</button>
+                <button class="star-btn text-3xl text-gray-300" data-val="2">★</button>
+                <button class="star-btn text-3xl text-gray-300" data-val="3">★</button>
+                <button class="star-btn text-3xl text-gray-300" data-val="4">★</button>
+                <button class="star-btn text-3xl text-gray-300" data-val="5">★</button>
+              </div>
+              <input type="text" id="review-name" placeholder="Your name" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-700 outline-none border border-gray-200 focus:border-primary mb-3" />
+              <textarea id="review-text" rows="3" placeholder="Share your experience with this recipe..." class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-700 outline-none border border-gray-200 focus:border-primary resize-none mb-3"></textarea>
+              <button onclick="submitReview()" class="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:bg-orange-600 transition-colors text-sm">
+                Submit Review
+              </button>
+            </div>
+          </div>
+
+        </div><!-- end left col -->
+
+        <!-- RIGHT: Sidebar -->
+        <div class="lg:col-span-1">
+          <div class="sticky top-24 space-y-6">
+
+            <!-- Chef Card -->
+            <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 reveal">
+              <h3 class="font-bold text-dark mb-4">About the Chef</h3>
+              <div class="flex items-center gap-3 mb-4">
+                <img src="https://i.pravatar.cc/56?img=47" alt="Chef" class="w-14 h-14 rounded-full" />
+                <div>
+                  <p class="font-bold text-dark">Chef Maria Santos</p>
+                  <p class="text-gray-500 text-xs">Pastry Chef · 12 years exp.</p>
+                </div>
+              </div>
+              <p class="text-gray-500 text-sm leading-relaxed mb-4">Specializing in comfort food and baked goods. Maria's recipes have been featured in top food magazines.</p>
+              <button id="follow-btn" onclick="toggleFollow()" class="w-full border border-primary text-primary font-semibold py-2.5 rounded-full hover:bg-primary hover:text-white transition-colors text-sm">
+                Follow Chef
+              </button>
+            </div>
+
+            <!-- Tags -->
+            <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 reveal reveal-delay-1">
+              <h3 class="font-bold text-dark mb-4">Tags</h3>
+              <div class="flex flex-wrap gap-2">
+                <span class="bg-orange-100 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">#pancakes</span>
+                <span class="bg-orange-100 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">#breakfast</span>
+                <span class="bg-orange-100 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">#brunch</span>
+                <span class="bg-orange-100 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">#quickeasy</span>
+                <span class="bg-orange-100 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">#buttermilk</span>
+                <span class="bg-orange-100 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">#american</span>
+                <span class="bg-orange-100 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">#familyfood</span>
+              </div>
+            </div>
+
+            <!-- Equipment -->
+            <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 reveal reveal-delay-2">
+              <h3 class="font-bold text-dark mb-4">Equipment Needed</h3>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li class="flex items-center gap-2"><span class="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xs">✓</span>Large mixing bowl</li>
+                <li class="flex items-center gap-2"><span class="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xs">✓</span>Non-stick griddle or skillet</li>
+                <li class="flex items-center gap-2"><span class="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xs">✓</span>Whisk</li>
+                <li class="flex items-center gap-2"><span class="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xs">✓</span>¼ cup measuring cup</li>
+                <li class="flex items-center gap-2"><span class="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xs">✓</span>Spatula</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MORE RECIPES ===== -->
+  <section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="text-3xl font-bold text-dark font-display mb-8 reveal">You Might Also Like</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block reveal reveal-delay-1">
+          <img src="https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=600&q=80" alt="Pasta" class="w-full h-44 object-cover" />
+          <div class="p-5">
+            <span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Pasta</span>
+            <h3 class="font-bold text-dark mt-2 mb-1">Creamy Garlic Mushroom Pasta</h3>
+            <div class="flex items-center justify-between text-sm text-gray-500 mt-3">
+              <span>⏱ 30 min</span><span class="text-yellow-500 font-semibold">★ 4.8</span>
+            </div>
+          </div>
+        </a>
+        <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block reveal reveal-delay-2">
+          <img src="https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80" alt="Cake" class="w-full h-44 object-cover" />
+          <div class="p-5">
+            <span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Desserts</span>
+            <h3 class="font-bold text-dark mt-2 mb-1">Dark Chocolate Lava Cake</h3>
+            <div class="flex items-center justify-between text-sm text-gray-500 mt-3">
+              <span>⏱ 25 min</span><span class="text-yellow-500 font-semibold">★ 5.0</span>
+            </div>
+          </div>
+        </a>
+        <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block reveal reveal-delay-3">
+          <img src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600&q=80" alt="Nasi Goreng" class="w-full h-44 object-cover" />
+          <div class="p-5">
+            <span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Asian</span>
+            <h3 class="font-bold text-dark mt-2 mb-1">Classic Nasi Goreng</h3>
+            <div class="flex items-center justify-between text-sm text-gray-500 mt-3">
+              <span>⏱ 25 min</span><span class="text-yellow-500 font-semibold">★ 4.9</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="bg-dark text-gray-400 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-2xl">🍴</span>
+            <span class="text-2xl font-bold text-white font-display">Flavora</span>
+          </div>
+          <p class="text-sm leading-relaxed mb-5">Your go-to destination for discovering and sharing amazing recipes from around the world.</p>
+          <div class="flex gap-3">
+            <!-- Facebook -->
+            <a href="#" aria-label="Facebook" class="w-10 h-10 rounded-xl flex items-center justify-center hover:opacity-80 transition-opacity" style="background:#3b5998">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5" fill="white">
+                <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987H7.898V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
+              </svg>
+            </a>
+            <!-- Instagram -->
+            <a href="#" aria-label="Instagram" class="w-10 h-10 rounded-xl flex items-center justify-center hover:opacity-80 transition-opacity" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5" fill="white">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.975.975 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.334 2.633-1.308 3.608-.975.975-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.334-3.608-1.308-.975-.975-1.246-2.242-1.308-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.334-2.633 1.308-3.608C4.516 2.497 5.783 2.226 7.149 2.163 8.415 2.105 8.795 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.636 2.014 1.977.673 3.318.194 5.16.109 7.015.014 8.295 0 8.704 0 12c0 3.296.014 3.705.109 4.985.085 1.855.564 3.697 1.905 5.038 1.341 1.341 3.183 1.82 5.038 1.905C8.332 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 1.855-.085 3.697-.564 5.038-1.905 1.341-1.341 1.82-3.183 1.905-5.038C23.986 15.705 24 15.296 24 12c0-3.296-.014-3.705-.109-4.985-.085-1.855-.564-3.697-1.905-5.038C20.645.636 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+              </svg>
+            </a>
+            <!-- YouTube -->
+            <a href="#" aria-label="YouTube" class="w-10 h-10 rounded-xl flex items-center justify-center hover:opacity-80 transition-opacity" style="background:#ff0000">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5" fill="white">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-4">Explore</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="index.html#recipes" class="hover:text-primary transition-colors">All Recipes</a></li>
+            <li><a href="index.html#categories" class="hover:text-primary transition-colors">Categories</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Popular</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">New Arrivals</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-4">Company</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="index.html#about" class="hover:text-primary transition-colors">About Us</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Our Chefs</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Blog</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-4">Contact Us</h4>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-center gap-2">📧 <span>hello@flavora.com</span></li>
+            <li class="flex items-center gap-2">📞 <span>+1 (555) 123-4567</span></li>
+            <li class="flex items-center gap-2">📍 <span>San Francisco, CA</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+        <p>© 2026 Flavora. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="#" class="hover:text-primary transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-primary transition-colors">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== BACK TO TOP ===== -->
+  <button id="back-to-top" class="fixed bottom-8 right-8 z-50 w-12 h-12 bg-primary text-white rounded-full shadow-lg flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 hover:bg-orange-600 hover:-translate-y-1" aria-label="Back to top">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
+    </svg>
+  </button>
+
+  <!-- ===== TOAST ===== -->
+  <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-dark text-white text-sm font-semibold px-6 py-3 rounded-full shadow-xl opacity-0 pointer-events-none flex items-center gap-2 transition-opacity duration-300">
+    <span id="toast-icon">✅</span>
+    <span id="toast-msg">Done!</span>
+  </div>
+
+  <!-- ===================================================
+       JAVASCRIPT
+  =================================================== -->
+  <script>
+    // ─────────────────────────────────────────
+    // DATA
+    // ─────────────────────────────────────────
+    // Base amounts for 4 servings
+    const BASE_SERVINGS = 4;
+    const ingredients = [
+      { label: 'all-purpose flour',   amount: 2,   unit: 'cups'  },
+      { label: 'granulated sugar',    amount: 2,   unit: 'tbsp'  },
+      { label: 'baking powder',       amount: 2,   unit: 'tsp'   },
+      { label: 'baking soda',         amount: 1,   unit: 'tsp'   },
+      { label: 'salt',                amount: 0.5, unit: 'tsp'   },
+      { label: 'buttermilk',          amount: 2,   unit: 'cups'  },
+      { label: 'eggs',                amount: 2,   unit: 'large' },
+      { label: 'melted butter',       amount: 3,   unit: 'tbsp'  },
+      { label: 'vanilla extract',     amount: 1,   unit: 'tsp'   },
+      { label: 'butter or oil for cooking', amount: null, unit: null },
+    ];
+
+    const stepsData = [
+      { title: 'Mix Dry Ingredients',   body: 'In a large bowl, whisk together the flour, sugar, baking powder, baking soda, and salt. Make a well in the center and set aside.' },
+      { title: 'Prepare Wet Ingredients', body: 'In a separate bowl, whisk together the buttermilk, eggs, melted butter, and vanilla extract until well combined.' },
+      { title: 'Combine the Batter',    body: 'Pour the wet ingredients into the well of the dry ingredients. Gently fold together until <strong>just combined</strong> — a few lumps are fine! Do not overmix.', tip: '💡 Let the batter rest 5 minutes before cooking for even fluffier pancakes.' },
+      { title: 'Heat the Pan',          body: 'Heat a non-stick griddle over medium heat. Lightly brush with butter or oil. The pan is ready when a drop of water sizzles immediately.' },
+      { title: 'Cook the Pancakes',     body: 'Pour ¼ cup of batter per pancake. Cook until bubbles form on the surface and edges look set, about 2–3 minutes. Flip and cook 1–2 minutes until golden brown.' },
+      { title: 'Serve & Enjoy!',        body: 'Serve immediately with maple syrup, fresh berries, and a pat of butter. Stack them high!', final: true },
+    ];
+
+    const seedReviews = [
+      { name: 'Sarah K.',   avatar: 'https://i.pravatar.cc/40?img=12', stars: 5, date: 'October 2, 2026',    text: 'These pancakes are absolutely incredible! The buttermilk makes such a difference. My kids devoured them in minutes!' },
+      { name: 'Michael R.', avatar: 'https://i.pravatar.cc/40?img=33', stars: 5, date: 'September 28, 2026', text: 'Tried many pancake recipes and this is by far the best. The tip about not overmixing is key. 10/10!' },
+      { name: 'Priya M.',   avatar: 'https://i.pravatar.cc/40?img=5',  stars: 4, date: 'September 15, 2026', text: 'Really great recipe! I added some blueberries to the batter and it was even better.' },
+    ];
+
+    // ─────────────────────────────────────────
+    // STATE
+    // ─────────────────────────────────────────
+    let currentServings = 4;
+    let selectedStar    = 0;
+    let isFollowing     = false;
+    let reviews         = [...seedReviews];
+    let favorites       = JSON.parse(localStorage.getItem('flavora-favs') || '[]');
+    const DETAIL_ID     = 1; // recipe id for this page
+
+    // ─────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────
+    function formatAmount(base, servings) {
+      const val = (base / BASE_SERVINGS) * servings;
+      // Show as fraction or decimal neatly
+      if (val % 1 === 0)   return val.toString();
+      if (val % 0.5 === 0) return val.toString();
+      return parseFloat(val.toFixed(2)).toString();
+    }
+
+    function showToast(icon, msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-icon').textContent = icon;
+      document.getElementById('toast-msg').textContent  = msg;
+      t.style.opacity = '1';
+      t.style.pointerEvents = 'auto';
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.pointerEvents = 'none';
+      }, 2500);
+    }
+
+    function starsHtml(n) {
+      return '★'.repeat(n) + (n < 5 ? '<span class="text-gray-300">' + '★'.repeat(5 - n) + '</span>' : '');
+    }
+
+    // ─────────────────────────────────────────
+    // 1. RENDER INGREDIENTS
+    // ─────────────────────────────────────────
+    function renderIngredients() {
+      const list = document.getElementById('ingredients-list');
+      list.innerHTML = ingredients.map((ing, i) => {
+        const amountStr = ing.amount
+          ? `<strong>${formatAmount(ing.amount, currentServings)} ${ing.unit}</strong>`
+          : '<strong>as needed</strong>';
+        return `
+          <div class="ingredient-item flex items-center gap-3 bg-white rounded-xl p-3" id="ing-${i}">
+            <input type="checkbox" id="chk-${i}" class="accent-orange-500 w-4 h-4 cursor-pointer flex-shrink-0"
+                   onchange="toggleIngredient(${i})" />
+            <label for="chk-${i}" class="text-sm text-gray-700 cursor-pointer">${amountStr} ${ing.label}</label>
+          </div>`;
+      }).join('');
+    }
+
+    function toggleIngredient(i) {
+      const item = document.getElementById(`ing-${i}`);
+      const chk  = document.getElementById(`chk-${i}`);
+      item.classList.toggle('checked', chk.checked);
+    }
+
+    function clearChecked() {
+      ingredients.forEach((_, i) => {
+        const item = document.getElementById(`ing-${i}`);
+        const chk  = document.getElementById(`chk-${i}`);
+        if (item && chk) { chk.checked = false; item.classList.remove('checked'); }
+      });
+    }
+
+    // ─────────────────────────────────────────
+    // 2. SERVINGS ADJUSTER
+    // ─────────────────────────────────────────
+    function changeServings(delta) {
+      currentServings = Math.max(1, Math.min(20, currentServings + delta));
+      document.getElementById('servings-count').textContent   = currentServings;
+      document.getElementById('serving-display').textContent  = `${currentServings} ${currentServings === 1 ? 'person' : 'people'}`;
+      document.getElementById('nutrition-servings').textContent = currentServings;
+      renderIngredients();
+    }
+
+    // ─────────────────────────────────────────
+    // 3. RENDER STEPS (clickable to mark done)
+    // ─────────────────────────────────────────
+    function renderSteps() {
+      const list = document.getElementById('steps-list');
+      list.innerHTML = stepsData.map((step, i) => {
+        const isFinal = step.final;
+        const circleColor = isFinal ? 'bg-green-500' : 'bg-primary';
+        const label = isFinal ? '✓' : (i + 1);
+        const tipHtml = step.tip
+          ? `<div class="mt-3 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-800">${step.tip}</div>`
+          : '';
+        return `
+          <div class="flex gap-5 cursor-pointer step-item" id="step-${i}" onclick="toggleStep(${i})">
+            <div class="step-num w-10 h-10 ${circleColor} rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 mt-1 transition-colors duration-300">${label}</div>
+            <div class="step-content ${isFinal ? 'bg-green-50 border border-green-100' : 'bg-gray-50'} rounded-2xl p-5 flex-1 transition-all duration-300">
+              <h3 class="font-bold text-dark mb-2">${step.title}</h3>
+              <p class="text-gray-600 leading-relaxed">${step.body}</p>
+              ${tipHtml}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function toggleStep(i) {
+      const stepEl = document.getElementById(`step-${i}`);
+      const isDone = stepEl.classList.toggle('step-done');
+      const numEl  = stepEl.querySelector('.step-num');
+      if (!stepsData[i].final) {
+        numEl.textContent = isDone ? '✓' : (i + 1);
+        numEl.classList.toggle('bg-green-500', isDone);
+        numEl.classList.toggle('bg-primary', !isDone);
+      }
+    }
+
+    function resetSteps() {
+      stepsData.forEach((_, i) => {
+        const stepEl = document.getElementById(`step-${i}`);
+        if (!stepEl) return;
+        stepEl.classList.remove('step-done');
+        const numEl = stepEl.querySelector('.step-num');
+        if (!stepsData[i].final) {
+          numEl.textContent = i + 1;
+          numEl.classList.add('bg-primary');
+          numEl.classList.remove('bg-green-500');
+        }
+      });
+    }
+
+    // ─────────────────────────────────────────
+    // 4. RENDER REVIEWS
+    // ─────────────────────────────────────────
+    function renderReviews() {
+      const list = document.getElementById('reviews-list');
+      list.innerHTML = reviews.map(r => `
+        <div class="bg-gray-50 rounded-2xl p-5">
+          <div class="flex items-start gap-4">
+            <img src="${r.avatar}" alt="${r.name}" class="w-10 h-10 rounded-full flex-shrink-0" />
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-semibold text-dark">${r.name}</span>
+                <span class="text-yellow-400 text-sm">${starsHtml(r.stars)}</span>
+              </div>
+              <p class="text-gray-500 text-xs mb-2">${r.date}</p>
+              <p class="text-gray-600 text-sm leading-relaxed">${r.text}</p>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    // ─────────────────────────────────────────
+    // 5. STAR RATING
+    // ─────────────────────────────────────────
+    document.getElementById('star-rating').addEventListener('mouseover', e => {
+      const btn = e.target.closest('.star-btn');
+      if (!btn) return;
+      const val = parseInt(btn.dataset.val);
+      highlightStars(val);
+    });
+    document.getElementById('star-rating').addEventListener('mouseleave', () => {
+      highlightStars(selectedStar);
+    });
+    document.getElementById('star-rating').addEventListener('click', e => {
+      const btn = e.target.closest('.star-btn');
+      if (!btn) return;
+      selectedStar = parseInt(btn.dataset.val);
+      highlightStars(selectedStar);
+    });
+
+    function highlightStars(n) {
+      document.querySelectorAll('.star-btn').forEach(b => {
+        const v = parseInt(b.dataset.val);
+        b.classList.toggle('text-yellow-400', v <= n);
+        b.classList.toggle('text-gray-300',   v > n);
+      });
+    }
+
+    // ─────────────────────────────────────────
+    // 6. SUBMIT REVIEW
+    // ─────────────────────────────────────────
+    function submitReview() {
+      const name = document.getElementById('review-name').value.trim();
+      const text = document.getElementById('review-text').value.trim();
+      if (!name || !text || selectedStar === 0) {
+        showToast('⚠️', 'Please fill all fields & select stars');
+        return;
+      }
+      const now = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      reviews.unshift({
+        name,
+        avatar: `https://i.pravatar.cc/40?img=${Math.floor(Math.random() * 70)}`,
+        stars: selectedStar,
+        date: now,
+        text,
+      });
+      renderReviews();
+      document.getElementById('review-name').value = '';
+      document.getElementById('review-text').value = '';
+      selectedStar = 0;
+      highlightStars(0);
+      showToast('✅', 'Review submitted!');
+    }
+
+    // ─────────────────────────────────────────
+    // 7. FAVORITE (detail page)
+    // ─────────────────────────────────────────
+    function updateFavUI() {
+      const isFav   = favorites.includes(DETAIL_ID);
+      const icon    = document.getElementById('fav-icon-detail');
+      const label   = document.getElementById('fav-label-detail');
+      const btn     = document.getElementById('fav-btn-detail');
+      icon.setAttribute('fill',   isFav ? 'white' : 'none');
+      icon.setAttribute('stroke', 'white');
+      label.textContent = isFav ? 'Saved ❤️' : 'Save Recipe';
+      btn.classList.toggle('bg-red-500',    isFav);
+      btn.classList.toggle('hover:bg-red-600', isFav);
+      btn.classList.toggle('bg-primary',    !isFav);
+      btn.classList.toggle('hover:bg-orange-600', !isFav);
+    }
+
+    function toggleFavDetail() {
+      const idx = favorites.indexOf(DETAIL_ID);
+      if (idx === -1) { favorites.push(DETAIL_ID); showToast('❤️', 'Recipe saved!'); }
+      else            { favorites.splice(idx, 1);  showToast('🗑️', 'Recipe removed'); }
+      localStorage.setItem('flavora-favs', JSON.stringify(favorites));
+      updateFavUI();
+    }
+
+    // ─────────────────────────────────────────
+    // 8. FOLLOW CHEF
+    // ─────────────────────────────────────────
+    function toggleFollow() {
+      isFollowing = !isFollowing;
+      const btn = document.getElementById('follow-btn');
+      btn.textContent = isFollowing ? '✓ Following' : 'Follow Chef';
+      btn.classList.toggle('bg-primary',   isFollowing);
+      btn.classList.toggle('text-white',   isFollowing);
+      btn.classList.toggle('border-primary', true);
+      showToast(isFollowing ? '👨‍🍳' : '👋', isFollowing ? 'Following Chef Maria!' : 'Unfollowed Chef Maria');
+    }
+
+    // ─────────────────────────────────────────
+    // 9. NAVBAR shadow on scroll
+    // ─────────────────────────────────────────
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('shadow-md', window.scrollY > 10);
+    });
+
+    // ─────────────────────────────────────────
+    // 10. HAMBURGER MENU
+    // ─────────────────────────────────────────
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileMenu   = document.getElementById('mobile-menu');
+    const line1 = document.getElementById('ham-line1');
+    const line2 = document.getElementById('ham-line2');
+    const line3 = document.getElementById('ham-line3');
+    let menuOpen = false;
+
+    hamburgerBtn.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('open', menuOpen);
+      line1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
+      line2.style.opacity   = menuOpen ? '0' : '1';
+      line3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
+    });
+
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        menuOpen = false;
+        mobileMenu.classList.remove('open');
+        line1.style.transform = '';
+        line2.style.opacity   = '1';
+        line3.style.transform = '';
+      });
+    });
+
+    // ─────────────────────────────────────────
+    // 11. BACK TO TOP
+    // ─────────────────────────────────────────
+    const backToTop = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+      backToTop.style.opacity       = window.scrollY > 400 ? '1' : '0';
+      backToTop.style.pointerEvents = window.scrollY > 400 ? 'auto' : 'none';
+    });
+    backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // ─────────────────────────────────────────
+    // 12. SCROLL REVEAL
+    // ─────────────────────────────────────────
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ─────────────────────────────────────────
+    // INIT
+    // ─────────────────────────────────────────
+    renderIngredients();
+    renderSteps();
+    renderReviews();
+    updateFavUI();
+  </script>
+
+</body>
+</html>

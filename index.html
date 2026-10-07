@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flavora – Discover Delicious Recipes</title>
+  <!-- Google Fonts: Playfair Display untuk display, DM Sans untuk body -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F97316',
+            secondary: '#FEF3C7',
+            dark: '#1C1917',
+          },
+          fontFamily: {
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .hero-bg {
+      background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+        url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1600&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    .card-hover {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    }
+
+    /* ── Scroll Reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+
+    /* ── Mobile Menu ── */
+    #mobile-menu {
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+    #mobile-menu.open {
+      max-height: 400px;
+      opacity: 1;
+    }
+
+    /* ── Recipe card hidden state ── */
+    .recipe-card.hidden-card {
+      display: none;
+    }
+
+    /* ── Carousel grid ── */
+    #recipe-grid {
+      /* grid-auto-columns set inline; transition handles smooth slide */
+      will-change: transform;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-800 font-sans" style="font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif">
+
+  <!-- ===== NAVBAR ===== -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-300">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="index.html" class="flex items-center gap-2">
+        <span class="text-3xl">🍴</span>
+        <span class="text-2xl font-bold text-primary font-display tracking-wide">Flavora</span>
+      </a>
+
+      <!-- Nav Links (desktop) -->
+      <ul class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+        <li><a href="index.html" class="text-primary border-b-2 border-primary pb-0.5">Home</a></li>
+        <li><a href="#categories" class="hover:text-primary transition-colors">Categories</a></li>
+        <li><a href="#recipes" class="hover:text-primary transition-colors">Recipes</a></li>
+        <li><a href="#about" class="hover:text-primary transition-colors">About</a></li>
+      </ul>
+
+      <!-- Search + CTA + Hamburger -->
+      <div class="flex items-center gap-3">
+        <!-- Live Search -->
+        <div class="hidden md:flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2">
+          <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          </svg>
+          <input id="search-input" type="text" placeholder="Search recipes..." class="bg-transparent text-sm outline-none w-36 text-gray-600 placeholder-gray-400" />
+        </div>
+        <a href="#" class="hidden md:block bg-primary text-white text-sm font-semibold px-5 py-2 rounded-full hover:bg-orange-600 transition-colors">
+          Sign Up
+        </a>
+        <!-- Hamburger button (mobile) -->
+        <button id="hamburger-btn" class="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Toggle menu">
+          <span id="ham-line1" class="block w-5 h-0.5 bg-gray-700 transition-all duration-300"></span>
+          <span id="ham-line2" class="block w-5 h-0.5 bg-gray-700 transition-all duration-300"></span>
+          <span id="ham-line3" class="block w-5 h-0.5 bg-gray-700 transition-all duration-300"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-100 px-6">
+      <!-- Mobile Search -->
+      <div class="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 my-4">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+        </svg>
+        <input id="search-input-mobile" type="text" placeholder="Search recipes..." class="bg-transparent text-sm outline-none w-full text-gray-600 placeholder-gray-400" />
+      </div>
+      <ul class="flex flex-col gap-1 pb-4 text-sm font-medium text-gray-600">
+        <li><a href="index.html" class="block py-2.5 px-3 rounded-xl text-primary bg-orange-50">Home</a></li>
+        <li><a href="#categories" class="block py-2.5 px-3 rounded-xl hover:bg-gray-50 hover:text-primary transition-colors">Categories</a></li>
+        <li><a href="#recipes" class="block py-2.5 px-3 rounded-xl hover:bg-gray-50 hover:text-primary transition-colors">Recipes</a></li>
+        <li><a href="#about" class="block py-2.5 px-3 rounded-xl hover:bg-gray-50 hover:text-primary transition-colors">About</a></li>
+        <li class="pt-2"><a href="#" class="block text-center bg-primary text-white font-semibold px-5 py-2.5 rounded-full hover:bg-orange-600 transition-colors">Sign Up</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero-bg min-h-screen flex items-center justify-center text-center px-6 pt-20">
+    <div class="max-w-3xl mx-auto">
+      <span class="inline-block bg-primary/20 text-orange-200 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-orange-300/30">
+        🌟 20 Curated Recipes
+      </span>
+      <h1 class="text-5xl md:text-7xl font-bold text-white font-display leading-tight mb-6">
+        Cook with <span class="text-primary">Passion</span>,<br/>Eat with <span class="text-yellow-300">Joy</span>
+      </h1>
+      <p class="text-gray-200 text-lg md:text-xl mb-10 max-w-xl mx-auto leading-relaxed">
+        Discover thousands of delicious recipes from around the world. From quick weeknight dinners to gourmet weekend feasts.
+      </p>
+      <div class="flex justify-center">
+        <a href="#recipes" class="bg-primary text-white font-semibold px-10 py-4 rounded-full hover:bg-orange-600 transition-all text-lg shadow-lg shadow-orange-500/30">
+          Explore Recipes
+        </a>
+      </div>
+      <!-- Stats -->
+      <div class="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto">
+        <div class="text-center">
+          <p class="text-3xl font-bold text-white">20</p>
+          <p class="text-gray-300 text-sm mt-1">Recipes</p>
+        </div>
+        <div class="text-center border-x border-white/20">
+          <p class="text-3xl font-bold text-white">6</p>
+          <p class="text-gray-300 text-sm mt-1">Cuisines</p>
+        </div>
+        <div class="text-center">
+          <p class="text-3xl font-bold text-white">200K+</p>
+          <p class="text-gray-300 text-sm mt-1">Home Cooks</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CATEGORIES ===== -->
+  <section id="categories" class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-12 reveal">
+        <span class="text-primary font-semibold text-sm uppercase tracking-widest">Browse by</span>
+        <h2 class="text-4xl font-bold text-dark font-display mt-2">Recipe Categories</h2>
+        <p class="text-gray-500 mt-3 max-w-md mx-auto">Find the perfect recipe for every occasion and craving</p>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <button data-cat="Breakfast" class="cat-btn group flex flex-col items-center bg-white rounded-2xl p-6 shadow-sm hover:shadow-md hover:bg-primary transition-all duration-300 card-hover reveal reveal-delay-1">
+          <span class="text-4xl mb-3">🍳</span>
+          <span class="font-semibold text-gray-700 group-hover:text-white text-sm">Breakfast</span>
+          <span class="text-xs text-gray-400 group-hover:text-orange-100 mt-1">3 recipes</span>
+        </button>
+        <button data-cat="Salads" class="cat-btn group flex flex-col items-center bg-white rounded-2xl p-6 shadow-sm hover:shadow-md hover:bg-primary transition-all duration-300 card-hover reveal reveal-delay-2">
+          <span class="text-4xl mb-3">🥗</span>
+          <span class="font-semibold text-gray-700 group-hover:text-white text-sm">Salads</span>
+          <span class="text-xs text-gray-400 group-hover:text-orange-100 mt-1">3 recipes</span>
+        </button>
+        <button data-cat="Pasta" class="cat-btn group flex flex-col items-center bg-white rounded-2xl p-6 shadow-sm hover:shadow-md hover:bg-primary transition-all duration-300 card-hover reveal reveal-delay-3">
+          <span class="text-4xl mb-3">🍝</span>
+          <span class="font-semibold text-gray-700 group-hover:text-white text-sm">Pasta</span>
+          <span class="text-xs text-gray-400 group-hover:text-orange-100 mt-1">3 recipes</span>
+        </button>
+        <button data-cat="Chicken" class="cat-btn group flex flex-col items-center bg-white rounded-2xl p-6 shadow-sm hover:shadow-md hover:bg-primary transition-all duration-300 card-hover reveal reveal-delay-4">
+          <span class="text-4xl mb-3">🍗</span>
+          <span class="font-semibold text-gray-700 group-hover:text-white text-sm">Chicken</span>
+          <span class="text-xs text-gray-400 group-hover:text-orange-100 mt-1">3 recipes</span>
+        </button>
+        <button data-cat="Desserts" class="cat-btn group flex flex-col items-center bg-white rounded-2xl p-6 shadow-sm hover:shadow-md hover:bg-primary transition-all duration-300 card-hover reveal reveal-delay-5">
+          <span class="text-4xl mb-3">🎂</span>
+          <span class="font-semibold text-gray-700 group-hover:text-white text-sm">Desserts</span>
+          <span class="text-xs text-gray-400 group-hover:text-orange-100 mt-1">3 recipes</span>
+        </button>
+        <button data-cat="Drinks" class="cat-btn group flex flex-col items-center bg-white rounded-2xl p-6 shadow-sm hover:shadow-md hover:bg-primary transition-all duration-300 card-hover reveal reveal-delay-6">
+          <span class="text-4xl mb-3">🥤</span>
+          <span class="font-semibold text-gray-700 group-hover:text-white text-sm">Drinks</span>
+          <span class="text-xs text-gray-400 group-hover:text-orange-100 mt-1">2 recipes</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURED RECIPES ===== -->
+  <section id="recipes" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex items-end justify-between mb-12 reveal">
+        <div>
+          <span class="text-primary font-semibold text-sm uppercase tracking-widest">Hand-Picked</span>
+          <h2 class="text-4xl font-bold text-dark font-display mt-2">Featured Recipes</h2>
+        </div>
+        <a href="#" onclick="showAllRecipes(event)" class="hidden md:flex items-center gap-2 text-primary font-semibold hover:underline">
+          View All
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="flex gap-3 mb-10 overflow-x-auto pb-2">
+        <button data-filter="All" class="filter-btn active bg-primary text-white px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors">All</button>
+        <button data-filter="Quick & Easy" class="filter-btn bg-gray-100 text-gray-600 px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-primary hover:text-white transition-colors">Quick & Easy</button>
+        <button data-filter="Vegetarian" class="filter-btn bg-gray-100 text-gray-600 px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-primary hover:text-white transition-colors">Vegetarian</button>
+        <button data-filter="Asian" class="filter-btn bg-gray-100 text-gray-600 px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-primary hover:text-white transition-colors">Asian</button>
+        <button data-filter="Italian" class="filter-btn bg-gray-100 text-gray-600 px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-primary hover:text-white transition-colors">Italian</button>
+        <button data-filter="Healthy" class="filter-btn bg-gray-100 text-gray-600 px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap hover:bg-primary hover:text-white transition-colors">Healthy</button>
+      </div>
+
+      <!-- No results message -->
+      <div id="no-results" class="hidden text-center py-16">
+        <span class="text-5xl">🔍</span>
+        <p class="text-gray-500 mt-4 text-lg">No recipes found. Try a different search or filter.</p>
+        <button onclick="resetFilters()" class="mt-4 bg-primary text-white px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-orange-600 transition-colors">Show All Recipes</button>
+      </div>
+
+      <!-- Carousel wrapper -->
+      <div class="relative">
+        <!-- Prev button -->
+        <button id="carousel-prev" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200 border border-gray-100" aria-label="Previous">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <!-- Next button -->
+        <button id="carousel-next" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200 border border-gray-100" aria-label="Next">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+
+        <!-- Carousel viewport (overflow hidden) -->
+        <div class="overflow-hidden">
+          <!-- recipe-grid: 2 rows × N columns, scrolls horizontally -->
+          <div id="recipe-grid" class="grid grid-rows-2 grid-flow-col gap-6 transition-transform duration-500 ease-in-out"
+               style="grid-auto-columns: calc((100% - 2*1.5rem) / 3);">
+
+            <!-- Card 1 -->
+            <div class="recipe-card" data-title="Fluffy Buttermilk Pancakes" data-category="Breakfast" data-tags="quick & easy,breakfast">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=80" alt="Pancakes" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">⚡ Quick</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="1" onclick="toggleFav(event,this,1)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Breakfast</span><span class="text-xs text-gray-400">American</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Fluffy Buttermilk Pancakes</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 20 min · 👤 4</span><span class="text-yellow-500 font-semibold">★ 4.9</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="recipe-card" data-title="Creamy Garlic Mushroom Pasta" data-category="Pasta" data-tags="vegetarian,italian,pasta">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=600&q=80" alt="Pasta" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-green-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">🌿 Vegetarian</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="2" onclick="toggleFav(event,this,2)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Pasta</span><span class="text-xs text-gray-400">Italian</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Creamy Garlic Mushroom Pasta</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 30 min · 👤 2</span><span class="text-yellow-500 font-semibold">★ 4.8</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="recipe-card" data-title="Rainbow Veggie Power Bowl" data-category="Salads" data-tags="healthy,vegetarian,salads">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80" alt="Salad Bowl" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-blue-400 text-blue-900 text-xs font-bold px-3 py-1 rounded-full">💪 Healthy</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="3" onclick="toggleFav(event,this,3)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Salads</span><span class="text-xs text-gray-400">Mediterranean</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Rainbow Veggie Power Bowl</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 15 min · 👤 1</span><span class="text-yellow-500 font-semibold">★ 4.7</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="recipe-card" data-title="Classic Nasi Goreng" data-category="Asian" data-tags="asian,quick & easy,spicy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600&q=80" alt="Nasi Goreng" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-red-400 text-red-900 text-xs font-bold px-3 py-1 rounded-full">🌶 Spicy</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="4" onclick="toggleFav(event,this,4)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Asian</span><span class="text-xs text-gray-400">Indonesian</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Classic Nasi Goreng</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 25 min · 👤 2</span><span class="text-yellow-500 font-semibold">★ 4.9</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 5 -->
+            <div class="recipe-card" data-title="Crispy Chicken Smash Burger" data-category="Chicken" data-tags="chicken,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&q=80" alt="Smash Burger" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">⚡ Quick</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="5" onclick="toggleFav(event,this,5)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Chicken</span><span class="text-xs text-gray-400">American</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Crispy Chicken Smash Burger</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 35 min · 👤 2</span><span class="text-yellow-500 font-semibold">★ 4.8</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 6 -->
+            <div class="recipe-card" data-title="Dark Chocolate Lava Cake" data-category="Desserts" data-tags="desserts">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80" alt="Lava Cake" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-purple-400 text-purple-900 text-xs font-bold px-3 py-1 rounded-full">🎂 Dessert</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="6" onclick="toggleFav(event,this,6)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Desserts</span><span class="text-xs text-gray-400">French</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Dark Chocolate Lava Cake</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 25 min · 👤 4</span><span class="text-yellow-500 font-semibold">★ 5.0</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 7 -->
+            <div class="recipe-card" data-title="Avocado Toast with Poached Egg" data-category="Breakfast" data-tags="breakfast,healthy,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80" alt="Avocado Toast" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-blue-400 text-blue-900 text-xs font-bold px-3 py-1 rounded-full">💪 Healthy</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="7" onclick="toggleFav(event,this,7)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Breakfast</span><span class="text-xs text-gray-400">Modern</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Avocado Toast with Poached Egg</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 15 min · 👤 1</span><span class="text-yellow-500 font-semibold">★ 4.8</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 8 -->
+            <div class="recipe-card" data-title="Beef Bulgogi Bibimbap" data-category="Asian" data-tags="asian,healthy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1590301157890-4810ed352733?w=600&q=80" alt="Bibimbap" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-green-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">🌿 Balanced</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="8" onclick="toggleFav(event,this,8)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Asian</span><span class="text-xs text-gray-400">Korean</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Beef Bulgogi Bibimbap</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 40 min · 👤 2</span><span class="text-yellow-500 font-semibold">★ 4.9</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 9 -->
+            <div class="recipe-card" data-title="Spaghetti Carbonara" data-category="Pasta" data-tags="pasta,italian,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1611270629569-8b357cb88da9?w=600&q=80" alt="Spaghetti Carbonara" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">⚡ Quick</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="9" onclick="toggleFav(event,this,9)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Pasta</span><span class="text-xs text-gray-400">Italian</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Spaghetti Carbonara</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 25 min · 👤 2</span><span class="text-yellow-500 font-semibold">★ 4.9</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 10 -->
+            <div class="recipe-card" data-title="Mango Lassi" data-category="Drinks" data-tags="drinks,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1546173159-315724a31696?w=600&q=80" alt="Mango Lassi" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">⚡ Quick</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="10" onclick="toggleFav(event,this,10)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Drinks</span><span class="text-xs text-gray-400">Indian</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Mango Lassi</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 5 min · 👤 2</span><span class="text-yellow-500 font-semibold">★ 4.7</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 11 -->
+            <div class="recipe-card" data-title="Honey Garlic Butter Chicken" data-category="Chicken" data-tags="chicken,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1432139555190-58524dae6a55?w=600&q=80" alt="Honey Garlic Chicken" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">⚡ Quick</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="11" onclick="toggleFav(event,this,11)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Chicken</span><span class="text-xs text-gray-400">American</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Honey Garlic Butter Chicken</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 30 min · 👤 4</span><span class="text-yellow-500 font-semibold">★ 4.8</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 12 -->
+            <div class="recipe-card" data-title="Greek Salad" data-category="Salads" data-tags="salads,healthy,vegetarian,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&q=80" alt="Greek Salad" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-blue-400 text-blue-900 text-xs font-bold px-3 py-1 rounded-full">💪 Healthy</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="12" onclick="toggleFav(event,this,12)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Salads</span><span class="text-xs text-gray-400">Greek</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Classic Greek Salad</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 10 min · 👤 2</span><span class="text-yellow-500 font-semibold">★ 4.6</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 13 -->
+            <div class="recipe-card" data-title="Strawberry Cheesecake" data-category="Desserts" data-tags="desserts">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=80" alt="Cheesecake" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-purple-400 text-purple-900 text-xs font-bold px-3 py-1 rounded-full">🎂 Dessert</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="13" onclick="toggleFav(event,this,13)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Desserts</span><span class="text-xs text-gray-400">American</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Strawberry Cheesecake</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 60 min · 👤 8</span><span class="text-yellow-500 font-semibold">★ 4.9</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 14 -->
+            <div class="recipe-card" data-title="Tom Yum Soup" data-category="Asian" data-tags="asian,spicy,healthy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=600&q=80" alt="Tom Yum" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-red-400 text-red-900 text-xs font-bold px-3 py-1 rounded-full">🌶 Spicy</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="14" onclick="toggleFav(event,this,14)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Asian</span><span class="text-xs text-gray-400">Thai</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Tom Yum Goong</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 30 min · 👤 4</span><span class="text-yellow-500 font-semibold">★ 4.8</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 15 -->
+            <div class="recipe-card" data-title="Banana Smoothie Bowl" data-category="Breakfast" data-tags="breakfast,healthy,vegetarian,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=600&q=80" alt="Smoothie Bowl" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-blue-400 text-blue-900 text-xs font-bold px-3 py-1 rounded-full">💪 Healthy</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="15" onclick="toggleFav(event,this,15)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Breakfast</span><span class="text-xs text-gray-400">Modern</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Banana Smoothie Bowl</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 10 min · 👤 1</span><span class="text-yellow-500 font-semibold">★ 4.7</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 16 -->
+            <div class="recipe-card" data-title="Penne Arrabbiata" data-category="Pasta" data-tags="pasta,italian,vegetarian,spicy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1608219992759-8d74ed8d76eb?w=600&q=80" alt="Penne Arrabbiata" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-red-400 text-red-900 text-xs font-bold px-3 py-1 rounded-full">🌶 Spicy</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="16" onclick="toggleFav(event,this,16)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Pasta</span><span class="text-xs text-gray-400">Italian</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Penne Arrabbiata</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 20 min · 👤 3</span><span class="text-yellow-500 font-semibold">★ 4.7</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 17 -->
+            <div class="recipe-card" data-title="Grilled BBQ Chicken Wings" data-category="Chicken" data-tags="chicken,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=600&q=80" alt="BBQ Wings" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-orange-400 text-orange-900 text-xs font-bold px-3 py-1 rounded-full">🔥 Grilled</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="17" onclick="toggleFav(event,this,17)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Chicken</span><span class="text-xs text-gray-400">American</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Grilled BBQ Chicken Wings</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 45 min · 👤 4</span><span class="text-yellow-500 font-semibold">★ 4.8</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 18 -->
+            <div class="recipe-card" data-title="Matcha Latte" data-category="Drinks" data-tags="drinks,healthy,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1515823064-d6e0c04616a7?w=600&q=80" alt="Matcha Latte" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-green-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">🍵 Cafe</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="18" onclick="toggleFav(event,this,18)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Drinks</span><span class="text-xs text-gray-400">Japanese</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Iced Matcha Latte</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 5 min · 👤 1</span><span class="text-yellow-500 font-semibold">★ 4.9</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 19 -->
+            <div class="recipe-card" data-title="Caprese Salad" data-category="Salads" data-tags="salads,healthy,vegetarian,italian,quick & easy">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?w=600&q=80" alt="Caprese Salad" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-green-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full">🌿 Vegetarian</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="19" onclick="toggleFav(event,this,19)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Salads</span><span class="text-xs text-gray-400">Italian</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Classic Caprese Salad</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 10 min · 👤 2</span><span class="text-yellow-500 font-semibold">★ 4.8</span></div>
+                </div>
+              </a>
+            </div>
+
+            <!-- Card 20 -->
+            <div class="recipe-card" data-title="Tiramisu" data-category="Desserts" data-tags="desserts,italian">
+              <a href="recipe-detail.html" class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 card-hover block h-full">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=600&q=80" alt="Tiramisu" class="w-full h-44 object-cover" loading="lazy" />
+                  <span class="absolute top-3 left-3 bg-purple-400 text-purple-900 text-xs font-bold px-3 py-1 rounded-full">🎂 Dessert</span>
+                  <button class="fav-btn absolute top-3 right-3 bg-white w-9 h-9 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors" data-id="20" onclick="toggleFav(event,this,20)">
+                    <svg class="w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  </button>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center gap-2 mb-1"><span class="text-xs bg-orange-100 text-primary font-semibold px-2 py-0.5 rounded-full">Desserts</span><span class="text-xs text-gray-400">Italian</span></div>
+                  <h3 class="font-bold text-dark mb-1 text-sm leading-snug">Classic Tiramisu</h3>
+                  <div class="flex items-center justify-between text-xs text-gray-500 mt-2"><span>⏱ 30 min · 👤 6</span><span class="text-yellow-500 font-semibold">★ 5.0</span></div>
+                </div>
+              </a>
+            </div>
+
+          </div><!-- end #recipe-grid -->
+        </div><!-- end overflow-hidden -->
+
+        <!-- Dot indicators -->
+        <div id="carousel-dots" class="flex justify-center gap-2 mt-8"></div>
+      </div><!-- end .relative carousel wrapper -->
+    </div>
+  </section>
+
+  <!-- ===== NEWSLETTER ===== -->
+  <section class="py-20 bg-primary reveal">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <span class="text-4xl">📬</span>
+      <h2 class="text-4xl font-bold text-white font-display mt-4 mb-3">Never Miss a Recipe</h2>
+      <p class="text-orange-100 text-lg mb-8">Subscribe to get weekly recipes, cooking tips, and exclusive content delivered to your inbox.</p>
+      <div class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+        <input type="email" placeholder="Enter your email address" class="flex-1 px-5 py-4 rounded-full outline-none text-gray-700 text-sm placeholder-gray-400" />
+        <button class="bg-dark text-white font-semibold px-7 py-4 rounded-full hover:bg-gray-800 transition-colors whitespace-nowrap">
+          Subscribe Now
+        </button>
+      </div>
+      <p class="text-orange-200 text-xs mt-4">No spam. Unsubscribe anytime. 🔒</p>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section id="about" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div class="reveal">
+          <span class="text-primary font-semibold text-sm uppercase tracking-widest">Our Story</span>
+          <h2 class="text-4xl font-bold text-dark font-display mt-2 mb-6">Cooking Made Simple,<br/>Flavors Made Bold</h2>
+          <p class="text-gray-500 leading-relaxed mb-6">
+            Flavora was born from a simple belief: great food brings people together. We curate the best recipes from home cooks and professional chefs around the world, making it easy for anyone to cook delicious meals.
+          </p>
+          <p class="text-gray-500 leading-relaxed mb-8">
+            Every recipe is tested, rated, and reviewed by our community of passionate food lovers. Whether you're a beginner or a seasoned cook, you'll find something new to love here.
+          </p>
+          <div class="grid grid-cols-2 gap-6">
+            <div class="bg-gray-50 rounded-2xl p-5">
+              <p class="text-3xl font-bold text-primary">20</p>
+              <p class="text-gray-600 text-sm mt-1">Tested Recipes</p>
+            </div>
+            <div class="bg-gray-50 rounded-2xl p-5">
+              <p class="text-3xl font-bold text-primary">4.9★</p>
+              <p class="text-gray-600 text-sm mt-1">Average Rating</p>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 reveal reveal-delay-2">
+          <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80" alt="Cooking" class="rounded-3xl w-full h-64 object-cover mt-8" />
+          <img src="https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&q=80" alt="Food" class="rounded-3xl w-full h-64 object-cover" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="bg-dark text-gray-400 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-2xl">🍴</span>
+            <span class="text-2xl font-bold text-white font-display">Flavora</span>
+          </div>
+          <p class="text-sm leading-relaxed mb-5">Your go-to destination for discovering and sharing amazing recipes from around the world.</p>
+          <div class="flex gap-3">
+            <!-- Facebook -->
+            <a href="#" aria-label="Facebook" class="w-10 h-10 rounded-xl flex items-center justify-center hover:opacity-80 transition-opacity" style="background:#3b5998">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5" fill="white">
+                <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987H7.898V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
+              </svg>
+            </a>
+            <!-- Instagram -->
+            <a href="#" aria-label="Instagram" class="w-10 h-10 rounded-xl flex items-center justify-center hover:opacity-80 transition-opacity" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5" fill="white">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.975.975 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.334 2.633-1.308 3.608-.975.975-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.334-3.608-1.308-.975-.975-1.246-2.242-1.308-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.334-2.633 1.308-3.608C4.516 2.497 5.783 2.226 7.149 2.163 8.415 2.105 8.795 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.636 2.014 1.977.673 3.318.194 5.16.109 7.015.014 8.295 0 8.704 0 12c0 3.296.014 3.705.109 4.985.085 1.855.564 3.697 1.905 5.038 1.341 1.341 3.183 1.82 5.038 1.905C8.332 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 1.855-.085 3.697-.564 5.038-1.905 1.341-1.341 1.82-3.183 1.905-5.038C23.986 15.705 24 15.296 24 12c0-3.296-.014-3.705-.109-4.985-.085-1.855-.564-3.697-1.905-5.038C20.645.636 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+              </svg>
+            </a>
+            <!-- YouTube -->
+            <a href="#" aria-label="YouTube" class="w-10 h-10 rounded-xl flex items-center justify-center hover:opacity-80 transition-opacity" style="background:#ff0000">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5" fill="white">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-4">Explore</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#recipes" class="hover:text-primary transition-colors">All Recipes</a></li>
+            <li><a href="#categories" class="hover:text-primary transition-colors">Categories</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Popular</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">New Arrivals</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Seasonal</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-4">Company</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#about" class="hover:text-primary transition-colors">About Us</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Our Chefs</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Blog</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Careers</a></li>
+            <li><a href="#" class="hover:text-primary transition-colors">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-4">Contact Us</h4>
+          <ul class="space-y-2 text-sm">
+            <li class="flex items-center gap-2">📧 <span>hello@flavora.com</span></li>
+            <li class="flex items-center gap-2">📞 <span>+1 (555) 123-4567</span></li>
+            <li class="flex items-center gap-2">📍 <span>San Francisco, CA</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+        <p>© 2026 Flavora. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="#" class="hover:text-primary transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-primary transition-colors">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== BACK TO TOP BUTTON ===== -->
+  <button id="back-to-top" class="fixed bottom-8 right-8 z-50 w-12 h-12 bg-primary text-white rounded-full shadow-lg flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 hover:bg-orange-600 hover:-translate-y-1" aria-label="Back to top">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
+    </svg>
+  </button>
+
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-dark text-white text-sm font-semibold px-6 py-3 rounded-full shadow-xl opacity-0 pointer-events-none flex items-center gap-2">
+    <span id="toast-icon">❤️</span>
+    <span id="toast-msg">Recipe saved!</span>
+  </div>
+
+  <!-- ===================================================
+       JAVASCRIPT – All interactive features
+  =================================================== -->
+  <script>
+    // ─────────────────────────────────────────
+    // 1. NAVBAR – shadow on scroll
+    // ─────────────────────────────────────────
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('shadow-md', window.scrollY > 10);
+    });
+
+    // ─────────────────────────────────────────
+    // 2. HAMBURGER MENU
+    // ─────────────────────────────────────────
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileMenu   = document.getElementById('mobile-menu');
+    const line1 = document.getElementById('ham-line1');
+    const line2 = document.getElementById('ham-line2');
+    const line3 = document.getElementById('ham-line3');
+    let menuOpen = false;
+
+    hamburgerBtn.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('open', menuOpen);
+      // Animate to X
+      if (menuOpen) {
+        line1.style.transform = 'translateY(8px) rotate(45deg)';
+        line2.style.opacity   = '0';
+        line3.style.transform = 'translateY(-8px) rotate(-45deg)';
+      } else {
+        line1.style.transform = '';
+        line2.style.opacity   = '1';
+        line3.style.transform = '';
+      }
+    });
+
+    // Close menu when a link is clicked
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        menuOpen = false;
+        mobileMenu.classList.remove('open');
+        line1.style.transform = '';
+        line2.style.opacity   = '1';
+        line3.style.transform = '';
+      });
+    });
+
+    // ─────────────────────────────────────────
+    // CAROUSEL – infinite looping
+    // ─────────────────────────────────────────
+    const grid          = document.getElementById('recipe-grid');
+    const prevBtn       = document.getElementById('carousel-prev');
+    const nextBtn       = document.getElementById('carousel-next');
+    const dotsWrap      = document.getElementById('carousel-dots');
+    const COLS_PER_PAGE = 3; // 3 cols × 2 rows = 6 cards per page
+    let currentPage     = 0;
+    let totalPages      = 0;
+
+    function getVisibleCards() {
+      return [...document.querySelectorAll('.recipe-card')].filter(c => !c.classList.contains('hidden-card'));
+    }
+
+    function buildCarousel() {
+      const cards = getVisibleCards();
+      totalPages  = Math.max(1, Math.ceil(cards.length / (COLS_PER_PAGE * 2)));
+
+      // Clamp page within valid range (after filter reduces results)
+      currentPage = ((currentPage % totalPages) + totalPages) % totalPages;
+
+      // Slide the grid: each "page" moves COLS_PER_PAGE columns to the left
+      // card column width = 100%/COLS_PER_PAGE + gap
+      const gap = 24; // px – matches gap-6
+      grid.style.transform = `translateX(calc(${-currentPage * COLS_PER_PAGE} * (100% / ${COLS_PER_PAGE} + ${gap / COLS_PER_PAGE}px)))`;
+
+      // Rebuild dots
+      dotsWrap.innerHTML = '';
+      for (let i = 0; i < totalPages; i++) {
+        const dot = document.createElement('button');
+        dot.className = `h-2.5 rounded-full transition-all duration-300 ${i === currentPage ? 'bg-primary w-6' : 'bg-gray-300 w-2.5'}`;
+        dot.setAttribute('aria-label', `Page ${i + 1}`);
+        dot.addEventListener('click', () => { currentPage = i; buildCarousel(); });
+        dotsWrap.appendChild(dot);
+      }
+
+      // Always keep both buttons fully active for infinite loop
+      prevBtn.style.opacity       = '1';
+      prevBtn.style.pointerEvents = 'auto';
+      nextBtn.style.opacity       = '1';
+      nextBtn.style.pointerEvents = 'auto';
+    }
+
+    // Infinite loop: wrap around on either end
+    prevBtn.addEventListener('click', () => {
+      currentPage = (currentPage - 1 + totalPages) % totalPages;
+      buildCarousel();
+    });
+    nextBtn.addEventListener('click', () => {
+      currentPage = (currentPage + 1) % totalPages;
+      buildCarousel();
+    });
+
+    // ─────────────────────────────────────────
+    // 3. LIVE SEARCH
+    // ─────────────────────────────────────────
+    const searchDesktop = document.getElementById('search-input');
+    const searchMobile  = document.getElementById('search-input-mobile');
+
+    function handleSearch(query) {
+      // Sync both inputs
+      searchDesktop.value = query;
+      searchMobile.value  = query;
+      applyFilters();
+      // Scroll to Featured Recipes section when user starts typing
+      if (query.length === 1) {
+        document.getElementById('recipes').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    searchDesktop.addEventListener('input', e => handleSearch(e.target.value));
+    searchMobile.addEventListener('input',  e => handleSearch(e.target.value));
+
+    // ─────────────────────────────────────────
+    // 4. FILTER TABS
+    // ─────────────────────────────────────────
+    let activeFilter = 'All';
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.filter;
+        // Update active state
+        filterBtns.forEach(b => {
+          b.classList.remove('bg-primary', 'text-white');
+          b.classList.add('bg-gray-100', 'text-gray-600');
+        });
+        btn.classList.add('bg-primary', 'text-white');
+        btn.classList.remove('bg-gray-100', 'text-gray-600');
+        applyFilters();
+      });
+    });
+
+    // ─────────────────────────────────────────
+    // 5. CATEGORY BUTTONS → scroll + filter
+    // ─────────────────────────────────────────
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.dataset.cat;
+        activeFilter = cat;
+        // Update filter tab UI
+        filterBtns.forEach(b => {
+          b.classList.remove('bg-primary', 'text-white');
+          b.classList.add('bg-gray-100', 'text-gray-600');
+          if (b.dataset.filter === cat) {
+            b.classList.add('bg-primary', 'text-white');
+            b.classList.remove('bg-gray-100', 'text-gray-600');
+          }
+        });
+        // Scroll to recipes section
+        document.getElementById('recipes').scrollIntoView({ behavior: 'smooth' });
+        applyFilters();
+      });
+    });
+
+    // ─────────────────────────────────────────
+    // Core filter function (search + tabs combined)
+    // ─────────────────────────────────────────
+    function applyFilters() {
+      const query = searchDesktop.value.trim().toLowerCase();
+      const cards = document.querySelectorAll('.recipe-card');
+      let visible = 0;
+
+      cards.forEach(card => {
+        const title    = card.dataset.title.toLowerCase();
+        const category = card.dataset.category.toLowerCase();
+        const tags     = card.dataset.tags.toLowerCase();
+
+        const matchSearch = !query || title.includes(query) || tags.includes(query) || category.includes(query);
+        const matchFilter = activeFilter === 'All' || category === activeFilter.toLowerCase() || tags.includes(activeFilter.toLowerCase());
+
+        if (matchSearch && matchFilter) {
+          card.classList.remove('hidden-card');
+          visible++;
+        } else {
+          card.classList.add('hidden-card');
+        }
+      });
+
+      document.getElementById('no-results').classList.toggle('hidden', visible > 0);
+      // Reset to first page and rebuild carousel after every filter change
+      currentPage = 0;
+      buildCarousel();
+    }
+
+    function resetFilters() {
+      activeFilter = 'All';
+      searchDesktop.value = '';
+      searchMobile.value  = '';
+      filterBtns.forEach(b => {
+        b.classList.remove('bg-primary', 'text-white');
+        b.classList.add('bg-gray-100', 'text-gray-600');
+      });
+      filterBtns[0].classList.add('bg-primary', 'text-white');
+      filterBtns[0].classList.remove('bg-gray-100', 'text-gray-600');
+      applyFilters();
+    }
+
+    // "View All" button — reset filter, go to page 0, NO scroll to top
+    function showAllRecipes(e) {
+      e.preventDefault();
+      resetFilters();
+      // Stay in place, just make sure recipes section is visible
+      document.getElementById('recipes').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ─────────────────────────────────────────
+    // 6. FAVORITE TOGGLE + localStorage
+    // ─────────────────────────────────────────
+    let favorites = JSON.parse(localStorage.getItem('flavora-favs') || '[]');
+
+    function toggleFav(e, btn, id) {
+      e.preventDefault();
+      e.stopPropagation();
+      const svg = btn.querySelector('svg');
+      const idx = favorites.indexOf(id);
+
+      if (idx === -1) {
+        favorites.push(id);
+        svg.setAttribute('fill', '#ef4444');
+        svg.setAttribute('stroke', '#ef4444');
+        showToast('❤️', 'Recipe saved!');
+      } else {
+        favorites.splice(idx, 1);
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.classList.replace('text-red-500', 'text-gray-400');
+        showToast('🗑️', 'Recipe removed');
+      }
+      localStorage.setItem('flavora-favs', JSON.stringify(favorites));
+    }
+
+    // Apply saved favorites on load
+    document.querySelectorAll('.fav-btn').forEach(btn => {
+      const id  = parseInt(btn.dataset.id);
+      const svg = btn.querySelector('svg');
+      if (favorites.includes(id)) {
+        svg.setAttribute('fill', '#ef4444');
+        svg.setAttribute('stroke', '#ef4444');
+      }
+    });
+
+    // Init carousel on page load
+    buildCarousel();
+
+    // ─────────────────────────────────────────
+    // 7. TOAST NOTIFICATION
+    // ─────────────────────────────────────────
+    let toastTimer = null;
+    function showToast(icon, msg) {
+      const toast    = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      toastIcon.textContent = icon;
+      toastMsg.textContent  = msg;
+      toast.style.opacity        = '1';
+      toast.style.pointerEvents  = 'auto';
+      toast.style.transform      = 'translateX(-50%) translateY(0)';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.style.opacity       = '0';
+        toast.style.pointerEvents = 'none';
+      }, 2500);
+    }
+
+    // ─────────────────────────────────────────
+    // 8. BACK TO TOP
+    // ─────────────────────────────────────────
+    const backToTop = document.getElementById('back-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 400) {
+        backToTop.style.opacity       = '1';
+        backToTop.style.pointerEvents = 'auto';
+      } else {
+        backToTop.style.opacity       = '0';
+        backToTop.style.pointerEvents = 'none';
+      }
+    });
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ─────────────────────────────────────────
+    // 9. SCROLL REVEAL
+    // ─────────────────────────────────────────
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+  </script>
+
+</body>
+</html>
